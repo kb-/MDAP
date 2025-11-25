@@ -100,7 +100,12 @@ python mdap/experiments/example_towers.py
 
 # With real LLM (set API key first)
 export OPENAI_API_KEY="your-key"
-# Edit example_towers.py to uncomment OpenAI section
+python mdap/experiments/example_towers.py
+
+# With an OpenAI-compatible endpoint (e.g., qwen3 via Ollama)
+export OPENAI_API_KEY="not-used-but-required"
+export OPENAI_API_BASE="http://localhost:11435/v1"
+export OPENAI_API_MODEL="qwen3"
 python mdap/experiments/example_towers.py
 ```
 

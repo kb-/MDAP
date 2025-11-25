@@ -112,7 +112,7 @@ next_state = {next_state}
     return mock_llm
 
 
-def create_openai_llm(api_key: str, model: str = "gpt-4"):
+def create_openai_llm(api_key: str, model: str = "gpt-4", base_url: str | None = None):
     """
     Create an OpenAI LLM function.
 
@@ -128,7 +128,11 @@ def create_openai_llm(api_key: str, model: str = "gpt-4"):
     except ImportError:
         raise ImportError("Please install openai: pip install openai")
 
-    client = OpenAI(api_key=api_key)
+    client_kwargs = {"api_key": api_key}
+    if base_url:
+        client_kwargs["base_url"] = base_url
+
+    client = OpenAI(**client_kwargs)
 
     def llm_fn(system_prompt, user_prompt, kwargs):
         response = client.chat.completions.create(
@@ -162,16 +166,28 @@ def main():
     print()
 
     # Create LLM function
-    # Option 1: Mock LLM (for demonstration)
-    llm_fn = create_mock_llm()
-    print("Using: Mock LLM (perfect solver)")
+    openai_api_key = os.environ.get("OPENAI_API_KEY")
+    openai_api_base = os.environ.get("OPENAI_API_BASE")
+    openai_api_model = os.environ.get("OPENAI_API_MODEL")
 
-    # Option 2: OpenAI (uncomment to use)
-    # api_key = os.environ.get("OPENAI_API_KEY")
-    # if not api_key:
-    #     raise ValueError("Set OPENAI_API_KEY environment variable")
-    # llm_fn = create_openai_llm(api_key, model="gpt-4")
-    # print("Using: OpenAI GPT-4")
+    if openai_api_base or openai_api_key:
+        if not openai_api_key:
+            raise ValueError("Set OPENAI_API_KEY environment variable")
+
+        llm_fn = create_openai_llm(
+            api_key=openai_api_key,
+            model=openai_api_model or "gpt-4",
+            base_url=openai_api_base,
+        )
+        print(
+            "Using: OpenAI-compatible endpoint"
+            f" (model={openai_api_model or 'gpt-4'},"
+            f" base={openai_api_base or 'default'})"
+        )
+    else:
+        # Default to mock LLM (for demonstration)
+        llm_fn = create_mock_llm()
+        print("Using: Mock LLM (perfect solver)")
 
     print()
 
