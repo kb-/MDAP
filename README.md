@@ -48,13 +48,19 @@ from mdap.core.agent import TowersOfHanoiAgent
 from mdap.core.maker import MAKER
 from mdap.domains.towers_of_hanoi import create_initial_state, get_optimal_num_steps
 
-# 1. Create an LLM function (example with OpenAI)
+# 1. Create an LLM function (example with OpenAI-compatible endpoints)
 def llm_fn(system_prompt, user_prompt, kwargs):
+    """Uses OPENAI_API_* env vars (e.g., qwen3 via Ollama)."""
+    import os
     from openai import OpenAI
-    client = OpenAI(api_key="your-api-key")
+
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        base_url=os.environ.get("OPENAI_API_BASE"),  # e.g., http://localhost:11435/v1
+    )
 
     response = client.chat.completions.create(
-        model="gpt-4",
+        model=os.environ.get("OPENAI_API_MODEL", "gpt-4"),
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -104,10 +110,15 @@ python mdap/experiments/example_towers.py
 
 # With an OpenAI-compatible endpoint (e.g., qwen3 via Ollama)
 export OPENAI_API_KEY="not-used-but-required"
-export OPENAI_API_BASE="http://localhost:11434/v1"
+export OPENAI_API_BASE="http://localhost:11435/v1"
 export OPENAI_API_MODEL="qwen3"
 python mdap/experiments/example_towers.py
 ```
+
+When pointing at an OpenAI-compatible endpoint (like qwen3 served by Ollama),
+make sure your LLM function passes both `api_key` and `base_url` from
+`OPENAI_API_*` so the client targets the correct host instead of the default
+OpenAI API. The example above reads these environment variables directly.
 
 ## Architecture
 
