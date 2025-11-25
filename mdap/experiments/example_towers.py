@@ -134,6 +134,21 @@ def create_openai_llm(api_key: str, model: str = "gpt-4", base_url: str | None =
 
     client = OpenAI(**client_kwargs)
 
+    # qwen3 supports an OpenAI-compatible "disable_thinking" flag to skip
+    # thought-prefixed output. Only attach it when pointing at a non-OpenAI
+    # endpoint (to avoid sending unexpected params to OpenAI) and either:
+    #   - the model name indicates qwen3, or
+    #   - the user explicitly set OPENAI_DISABLE_THINKING to a truthy value.
+    disable_thinking_env = os.environ.get("OPENAI_DISABLE_THINKING")
+    disable_thinking = False
+
+    if disable_thinking_env is not None:
+        disable_thinking = disable_thinking_env.lower() in {"1", "true", "yes", "on"}
+    elif base_url and model and model.lower().startswith("qwen3"):
+        disable_thinking = True
+
+    extra_body = {"disable_thinking": True} if disable_thinking and base_url else None
+
     def llm_fn(system_prompt, user_prompt, kwargs):
         response = client.chat.completions.create(
             model=model,
@@ -142,7 +157,8 @@ def create_openai_llm(api_key: str, model: str = "gpt-4", base_url: str | None =
                 {"role": "user", "content": user_prompt}
             ],
             max_tokens=kwargs.get("max_tokens", 750),
-            temperature=kwargs.get("temperature", 0.1)
+            temperature=kwargs.get("temperature", 0.1),
+            extra_body=extra_body,
         )
         return response.choices[0].message.content
 

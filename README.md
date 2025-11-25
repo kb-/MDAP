@@ -118,7 +118,10 @@ python mdap/experiments/example_towers.py
 When pointing at an OpenAI-compatible endpoint (like qwen3 served by Ollama),
 make sure your LLM function passes both `api_key` and `base_url` from
 `OPENAI_API_*` so the client targets the correct host instead of the default
-OpenAI API. The example above reads these environment variables directly.
+OpenAI API. The example above reads these environment variables directly and
+sets `disable_thinking=True` for qwen3 runs when a non-OpenAI `OPENAI_API_BASE`
+is provided (or when `OPENAI_DISABLE_THINKING=1` is set) to suppress
+thinking-prefixed output.
 
 ## Architecture
 
